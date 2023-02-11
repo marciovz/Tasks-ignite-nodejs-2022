@@ -10,7 +10,23 @@ export const routes = [
     method: 'GET',
     path: buildRoutePath('/tasks'),
     handler: (req, res) => {
-      const tasks = database.select('tasks');
+      const { search } = req.query;
+
+      const searchOptions = search ? { title: search, description: search } : null
+
+      const tasks = database.select('tasks', searchOptions);
+
+      return res.end(JSON.stringify(tasks));
+    }
+  },
+  {
+    method: 'GET',
+    path: buildRoutePath('/tasks/:id'),
+    handler: (req, res) => {
+      const { id } = req.params;
+
+      const tasks = database.selectById('tasks', id);
+
       return res.end(JSON.stringify(tasks));
     }
   },
@@ -48,7 +64,7 @@ export const routes = [
       const { title, description } = req.body;
       if( title === '') return res.writeHead(400).end(JSON.stringify('title cannot be empty!'));
       
-      const oldTask = database.select('tasks', id);
+      const oldTask = database.selectById('tasks', id);
       if (oldTask.length <= 0) return res.writeHead(400).end('task id not found!');
       
       database.update('tasks', id, {
