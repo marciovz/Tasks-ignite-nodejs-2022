@@ -16,10 +16,18 @@ export const routes = [
     method: 'POST',
     path: '/tasks',
     handler: (req, res) => {
+      console.log(req.body);
+      if (!req.body) return res.writeHead(400).end();
+      
+      const { title, description } = req.body;
+
+      if (!title  || title === '') return res.writeHead(400).end();
+      if (!description || description === '') return res.writeHead(400).end();
+
       const task = database.insert('tasks', {
         id: randomUUID(),
-        title: 'módulo 1 de nodejs',
-        descrition: 'Terminar o módulo 1 de nodejs',
+        title,
+        description,
         completed_at: null,
         created_at: new Date(),
         updated_at: new Date(),
