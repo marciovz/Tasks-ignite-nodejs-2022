@@ -19,8 +19,13 @@ export class Database {
     fs.writeFile(databasePath, JSON.stringify(this.#database));
   }
 
-  select(table) {
+  select(table, id) {
     let data = this.#database[table] ?? [];
+
+    if (id) {
+      data = data.find(row => row.id === id);
+    }
+
     return data;
   }
 
@@ -33,6 +38,15 @@ export class Database {
 
     this.#persist();
     return data;
+  }
+
+  update(table, id, data) {
+    const rowIndex = this.#database[table].findIndex(row => row.id === id)
+
+    if (rowIndex > -1) {
+      this.#database[table][rowIndex] = { id, ...data };
+      this.#persist();
+    }
   }
 
   delete(table, id) {

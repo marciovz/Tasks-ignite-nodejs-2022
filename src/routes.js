@@ -39,6 +39,30 @@ export const routes = [
     }
   },
   {
+    method: 'PUT',
+    path: buildRoutePath('/tasks/:id'),
+    handler: (req, res) => {
+      const { id } = req.params;
+      
+      if (!req.body) return res.writeHead(400).end('params not found!');
+      const { title, description } = req.body;
+      if( title === '') return res.writeHead(400).end(JSON.stringify('title cannot be empty!'));
+      
+      const oldTask = database.select('tasks', id);
+      if (oldTask.length <= 0) return res.writeHead(400).end('task id not found!');
+      
+      database.update('tasks', id, {
+        title: title ?? oldTask.title,
+        description: description ?? oldTask.description,
+        completed_at: oldTask.completed_at,
+        updated_at: new Date(),
+        created_at: oldTask.created_at
+      });
+
+      return res.writeHead(204).end();
+    }
+  },
+  {
     method: 'DELETE',
     path: buildRoutePath('/tasks/:id'),
     handler: (req, res) => {
