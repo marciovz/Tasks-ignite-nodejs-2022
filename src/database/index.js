@@ -19,7 +19,13 @@ export class Database {
     fs.writeFile(databasePath, JSON.stringify(this.#database));
   }
 
+  #existTable(table) {
+    return Array.isArray(this.#database[table]);
+  }
+
   select(table, search) {
+    if (!this.#existTable(table)) return;
+
     let data = this.#database[table] ?? [];
 
     if (search) {
@@ -34,18 +40,20 @@ export class Database {
   }
 
   selectById(table, id) {
+    if (!this.#existTable(table)) return;
+
     let data = this.#database[table] ?? [];
 
     if (id) {
       data = data.find(row => row.id === id);
-    } 
+    }
 
     return data;
   }
 
   insert(table, data) {
-    if (Array.isArray(this.#database[table])) {
-      this.#database[table].push(data);
+    if (this.#existTable(table)) {
+      this.#database[table].push(data)
     } else {
       this.#database[table] = [data];
     }
@@ -55,21 +63,25 @@ export class Database {
   }
 
   update(table, id, data) {
-    const rowIndex = this.#database[table].findIndex(row => row.id === id)
+    if (!this.#existTable(table)) return;
 
-    if (rowIndex > -1) {
-      this.#database[table][rowIndex] = { id, ...data };
-      this.#persist();
-    }
+    const rowIndex = this.#database[table].findIndex(row => row.id === id)
+    if (rowIndex < 0) return;
+
+    this.#database[table][rowIndex] = { id, ...data };
+    this.#persist();
+    return this.#database[table][rowIndex];
   }
 
   delete(table, id) {
-    const rowIndex = this.#database[table].findIndex(row => row.id === id);
+    if (!this.#existTable(table)) return;
 
-    if (rowIndex > -1) {
-      this.#database[table].splice(rowIndex, 1);
-      this.#persist();
-    }
+    const rowIndex = this.#database[table].findIndex(row => row.id === id);
+    if (rowIndex < 0) return;
+
+    this.#database[table].splice(rowIndex, 1);
+    this.#persist();
+    return id;
   }
 
 }

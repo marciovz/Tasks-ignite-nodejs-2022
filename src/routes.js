@@ -14,9 +14,9 @@ export const routes = [
 
       const searchOptions = search ? { title: search, description: search } : null
 
-      const tasks = database.select('tasks', searchOptions);
+      const tasksFound = database.select('tasks', searchOptions);
 
-      return res.end(JSON.stringify(tasks));
+      return res.end(JSON.stringify(tasksFound));
     }
   },
   {
@@ -25,9 +25,9 @@ export const routes = [
     handler: (req, res) => {
       const { id } = req.params;
 
-      const tasks = database.selectById('tasks', id);
+      const taskFound = database.selectById('tasks', id);
 
-      return res.end(JSON.stringify(tasks));
+      return res.end(JSON.stringify(taskFound));
     }
   },
   {
@@ -42,16 +42,18 @@ export const routes = [
       if (!title  || title === '') return res.writeHead(400).end();
       if (!description || description === '') return res.writeHead(400).end();
 
-      const task = database.insert('tasks', {
+      const newTask = {
         id: randomUUID(),
         title,
         description,
         completed_at: null,
         created_at: new Date(),
         updated_at: new Date(),
-      });
+      }
+
+      const createdTask = database.insert('tasks', newTask);
   
-      return res.end(JSON.stringify(task));
+      return res.end(JSON.stringify(createdTask));
     }
   },
   {
@@ -64,18 +66,40 @@ export const routes = [
       const { title, description } = req.body;
       if( title === '') return res.writeHead(400).end(JSON.stringify('title cannot be empty!'));
       
-      const oldTask = database.selectById('tasks', id);
-      if (oldTask.length <= 0) return res.writeHead(400).end('task id not found!');
+      const taskFound = database.selectById('tasks', id);
+      if (taskFound.length <= 0) return res.writeHead(400).end('task not found!');
       
-      database.update('tasks', id, {
-        title: title ?? oldTask.title,
-        description: description ?? oldTask.description,
-        completed_at: oldTask.completed_at,
+      const newTask = {
+        title: title ?? taskFound.title,
+        description: description ?? taskFound.description,
+        completed_at: taskFound.completed_at,
         updated_at: new Date(),
-        created_at: oldTask.created_at
-      });
+        created_at: taskFound.created_at
+      }
 
-      return res.writeHead(204).end();
+      const modifiedTask = database.update('tasks', id, newTask);
+
+      return res.end(JSON.stringify(modifiedTask));
+    }
+  },
+  {
+    method: 'PATCH',
+    path: buildRoutePath('/tasks/:id'),
+    handler: (req, res) => {
+      const { id } = req.params;
+
+      const taskFound = database.selectById('tasks', id);
+      if (taskFound.length <= 0) return res.writeHead(400).end('task not found!');
+
+      const newTask = {
+        ...taskFound,  
+        completed_at: taskFound.completed_at ? null : new Date(),
+        updated_at: new Date(),
+      }
+
+      const modifiedTask = database.update('tasks', id, newTask);
+
+      return res.end(JSON.stringify(modifiedTask));
     }
   },
   {
@@ -83,8 +107,12 @@ export const routes = [
     path: buildRoutePath('/tasks/:id'),
     handler: (req, res) => {
       const { id } = req.params;
-      database.delete('tasks', id);
-      return res.writeHead(204).end();
+
+      const taskFound = database.selectById('tasks', id);
+      if (!taskFound) return res.writeHead(400).end(JSON.stringify('task not found!'));
+      
+      const idDeleted = database.delete('tasks', id);
+      return res.end(JSON.stringify(idDeleted));
     }
   }
 ]
