@@ -25,7 +25,6 @@ export const TasksController = {
   },
 
   createTask: (req, res) => {
-    console.log(req.body);
     if (!req.body) return res.writeHead(400).end();
     
     const { title, description } = req.body;
